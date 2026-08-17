@@ -1,3 +1,299 @@
-@use 'styles/tokens';
-@use 'styles/themes';
-@use 'styles/components';
+@use 'tailwindcss';
+
+/* ===== TEMA OSCURO (atributo data-theme) ===== */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace;
+}
+
+/* ===== BASE ===== */
+:root {
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+:where([data-theme='dark']) {
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+:where([data-theme='dark']) body {
+  background-color: #020617;
+  color: #f1f5f9;
+}
+
+@media (max-width: 1024px) {
+  body {
+    overflow: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+  input,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-indigo-600);
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-300) transparent;
+}
+:where([data-theme='dark']) * {
+  scrollbar-color: var(--color-slate-700) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== COMPONENTES ===== */
+@layer components {
+  /* --- Botones --- */
+  .btn {
+    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold leading-none whitespace-nowrap transition-colors duration-150 select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-primary {
+    @apply bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600;
+  }
+  .btn-accent {
+    @apply bg-amber-500 text-amber-950 shadow-sm hover:bg-amber-600 focus-visible:outline-amber-500;
+  }
+  .btn-outline {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-indigo-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white;
+  }
+  .btn-ghost {
+    @apply text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-indigo-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600;
+  }
+  .btn-success {
+    @apply bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:outline-emerald-600;
+  }
+  .btn-sm {
+    @apply min-h-8 px-2.5 text-xs;
+  }
+  .btn-xs {
+    @apply min-h-6 px-2 text-xs;
+  }
+  .btn-icon {
+    @apply min-h-9 min-w-9 p-0;
+  }
+  .btn-icon-sm {
+    @apply min-h-7 min-w-7 p-0;
+  }
+
+  /* --- Controles de formulario --- */
+  .input,
+  .select {
+    @apply h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400;
+  }
+  .select {
+    @apply appearance-none pr-8;
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1rem;
+  }
+  input[type='date'].input,
+  input[type='date'].select {
+    @apply pr-2;
+  }
+
+  /* --- Tarjetas --- */
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+  }
+
+  /* --- Badges --- */
+  .badge {
+    @apply inline-flex items-center rounded-md px-1.5 py-0.5 text-[0.65rem] leading-none font-semibold whitespace-nowrap;
+  }
+  .badge-primary {
+    @apply bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300;
+  }
+  .badge-success {
+    @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300;
+  }
+  .badge-amber {
+    @apply bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300;
+  }
+  .badge-slate {
+    @apply bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300;
+  }
+  .badge-white {
+    @apply bg-white text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300;
+  }
+  .badge-espuma {
+    @apply bg-violet-600 text-white;
+  }
+  .badge-resorte {
+    @apply bg-cyan-600 text-white;
+  }
+
+  /* --- Tablas --- */
+  .table {
+    @apply w-full text-sm;
+  }
+  .table thead {
+    @apply text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400;
+  }
+  .table th {
+    @apply px-2 py-1.5 text-left font-semibold;
+  }
+  .table td {
+    @apply px-2 py-1.5 align-middle;
+  }
+
+  /* --- Panel desplegable (filtros) --- */
+  .dropdown-panel {
+    @apply absolute z-20 mt-1 w-full min-w-60 rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900;
+  }
+
+  /* --- Navegación principal --- */
+  .nav-link {
+    @apply inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors no-underline dark:text-slate-300;
+  }
+  .nav-link:hover {
+    @apply bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white;
+  }
+  .nav-link.active {
+    @apply bg-indigo-600 font-semibold text-white;
+  }
+
+  /* --- Skeleton --- */
+  .skeleton {
+    @apply inline-block animate-pulse rounded bg-slate-200 dark:bg-slate-800;
+  }
+  .skeleton-block {
+    @apply mb-1.5 inline-block h-12 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-800;
+  }
+  .skeleton-line {
+    @apply mb-2 inline-block h-3 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-800;
+  }
+  .skeleton-line:last-child {
+    width: 60%;
+  }
+}
+
+/* ===== UTILIDADES DE LA APP ===== */
+@layer utilities {
+  .truncate-row {
+    @apply min-w-0 truncate;
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  .touch-target {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center;
+  }
+  .touch-target-sm {
+    @apply inline-flex min-h-9 min-w-9 items-center justify-center;
+  }
+  .min-h-0 {
+    min-height: 0;
+  }
+}
+
+/* ===== ÁRBOL UBIGEO / CARRO ===== */
+.rotate-chevron {
+  transform: rotate(90deg);
+  transition: transform 0.15s ease;
+}
+.cart-client-header {
+  user-select: none;
+}
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+.sortable-ghost {
+  opacity: 0.5;
+  background-color: #e2e8f0;
+}
+:where([data-theme='dark']) .sortable-ghost {
+  background-color: #1e293b;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pulseCount {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.cart-item-enter {
+  animation: fadeSlideIn 0.25s ease-out both;
+}
+.cart-item-exit {
+  animation: fadeSlideOut 0.2s ease-in both;
+}
+.pulse-on-change {
+  animation: pulseCount 0.3s ease;
+}

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { LucideChevronDown, LucideChevronRight, LucideCircleCheck, LucideClock, LucidePencil, LucidePrinter, LucideRefreshCw, LucideTrash2 } from '@lucide/angular';
 import { ResourcesService } from '../../core/resources/resources.service';
 import { EstadoService } from '../../core/state/estado.service';
 import { ApiService } from '../../core/api/api.service';
@@ -12,111 +13,110 @@ import { ApiError } from '../../core/api/api-error';
 @Component({
   selector: 'app-historial',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [LucideChevronDown, LucideChevronRight, LucideCircleCheck, LucideClock, LucidePencil, LucidePrinter, LucideRefreshCw, LucideTrash2],
   template: `
-    <div class="p-3 h-100 overflow-auto">
-      <div class="card mb-3 p-2 bg-light border-0 shadow-sm">
-        <div class="row g-2 align-items-center">
-          <div class="col-auto">
-            <label class="fw-bold small" for="txtFechaHistorial">Filtrar por fecha:</label>
-          </div>
-          <div class="col-auto">
-            <input
-              type="date"
-              id="txtFechaHistorial"
-              class="form-control form-control-sm"
-              [value]="resources.historialFecha()"
-              (change)="setFecha($any($event.target).value)"
-              autocomplete="off"
-              aria-label="Filtrar historial por fecha"
-            />
-          </div>
-          <div class="col text-end">
-            <button type="button" class="btn btn-sm btn-outline-primary" (click)="resources.refresh()">
-              <i class="bi bi-arrow-clockwise"></i> Recargar
-            </button>
-          </div>
-        </div>
+    <div class="h-full overflow-auto p-3">
+      <div class="card mb-3 flex flex-wrap items-center gap-2 p-2">
+        <label class="text-sm font-bold" for="txtFechaHistorial">Filtrar por fecha:</label>
+        <input
+          type="date"
+          id="txtFechaHistorial"
+          class="input w-auto"
+          [value]="resources.historialFecha()"
+          (change)="setFecha($any($event.target).value)"
+          autocomplete="off"
+          aria-label="Filtrar historial por fecha"
+        />
+        <button type="button" class="btn btn-outline btn-sm" (click)="resources.refresh()">
+          <svg lucideRefreshCw [size]="14" [strokeWidth]="2" aria-hidden="true"></svg> Recargar
+        </button>
       </div>
 
       @if (historial.isLoading() || count.isLoading()) {
-        <div class="card p-3 bg-card border-card">
+        <div class="card p-3">
           <div class="skeleton skeleton-block"></div>
           <div class="skeleton skeleton-block" style="height:36px"></div>
           <div class="skeleton skeleton-block" style="height:36px"></div>
         </div>
       } @else if (historial.error()) {
-        <div class="alert alert-danger small">Error al cargar historial</div>
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          Error al cargar historial
+        </div>
       } @else {
-        <div class="table-responsive">
-          <table class="table table-sm table-striped table-hover bg-card border text-small">
-            <thead class="table-dark">
+        <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <table class="table text-sm">
+            <thead class="bg-slate-900 text-white dark:bg-slate-950">
               <tr>
-                <th style="width:32px"></th>
+                <th class="w-8"></th>
                 <th>ID</th>
                 <th>Fecha</th>
                 <th>Chofer</th>
                 <th>Placa</th>
-                <th>C.E.</th>
-                <th>C.R.</th>
-                <th>Prep.</th>
+                <th class="text-center">C.E.</th>
+                <th class="text-center">C.R.</th>
+                <th class="text-center">Prep.</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               @for (r of registros(); track r.id) {
                 <ng-container>
-                  <tr class="hist-main-row cursor-pointer" (click)="toggleDetail(r.id)">
-                    <td class="text-center hist-toggle-icon">
-                      <i class="bi" [class.bi-chevron-right]="!openDetails().has(r.id)" [class.bi-chevron-down]="openDetails().has(r.id)" style="font-size:0.7rem"></i>
+                  <tr class="cursor-pointer border-b border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50" (click)="toggleDetail(r.id)">
+                    <td class="text-center">
+                      @if (openDetails().has(r.id)) {
+                        <svg lucideChevronDown [size]="14" [strokeWidth]="2" aria-hidden="true"></svg>
+                      } @else {
+                        <svg lucideChevronRight [size]="14" [strokeWidth]="2" aria-hidden="true"></svg>
+                      }
                     </td>
                     <td class="font-mono">{{ r.id }}</td>
                     <td>{{ r.fecha.split(' ')[0] }}</td>
                     <td>{{ r.chofer.split(' ')[0] }}</td>
                     <td>{{ r.placa }}</td>
-                    <td class="text-center fw-bold text-espuma">{{ r.espumas }}</td>
-                    <td class="text-center fw-bold text-resorte">{{ r.resortes }}</td>
+                    <td class="text-center font-bold text-violet-600 dark:text-violet-400">{{ r.espumas }}</td>
+                    <td class="text-center font-bold text-cyan-600 dark:text-cyan-400">{{ r.resortes }}</td>
                     <td class="text-center">
                       @if (prepInfo(r); as info) {
-                        <span class="fw-bold">{{ info.prepared }}/{{ info.total }}</span>
+                        <span class="font-bold">{{ info.prepared }}/{{ info.total }}</span>
                         @if (info.prepared === info.total) {
-                          <span class="badge bg-success ms-1" style="font-size:0.55rem">✓</span>
+                          <span class="badge badge-success ml-1">✓</span>
                         } @else {
-                          <span class="badge bg-warning text-dark ms-1" style="font-size:0.55rem">
+                          <span class="badge badge-amber ml-1">
                             {{ pctPrepared(info.prepared, info.total) }}%
                           </span>
                         }
                       } @else {
-                        <span class="text-muted small">-</span>
+                        <span class="text-sm text-slate-400">-</span>
                       }
                     </td>
-                    <td class="text-nowrap">
-                      <button type="button" class="btn btn-sm btn-outline-dark py-0" (click)="reimprimir(r)" title="Imprimir">
-                        <i class="bi bi-printer"></i>
+                    <td class="whitespace-nowrap">
+                      <button type="button" class="btn btn-ghost btn-icon-sm" (click)="reimprimir(r)" title="Imprimir">
+                        <svg lucidePrinter [size]="15" [strokeWidth]="2" aria-hidden="true"></svg>
                       </button>
-                      <button type="button" class="btn btn-sm btn-outline-primary py-0" (click)="editar(r)" title="Editar">
-                        <i class="bi bi-pencil"></i>
+                      <button type="button" class="btn btn-ghost btn-icon-sm" (click)="editar(r)" title="Editar">
+                        <svg lucidePencil [size]="15" [strokeWidth]="2" aria-hidden="true" class="text-indigo-600 dark:text-indigo-400"></svg>
                       </button>
-                      <button type="button" class="btn btn-sm btn-outline-danger py-0" (click)="eliminar(r)" title="Eliminar">
-                        <i class="bi bi-trash"></i>
+                      <button type="button" class="btn btn-ghost btn-icon-sm" (click)="eliminar(r)" title="Eliminar">
+                        <svg lucideTrash2 [size]="15" [strokeWidth]="2" aria-hidden="true" class="text-red-600 dark:text-red-400"></svg>
                       </button>
                     </td>
                   </tr>
                   @if (openDetails().has(r.id)) {
-                    <tr class="hist-detail-row">
-                      <td colspan="9" class="p-2 bg-light">
+                    <tr class="bg-slate-50 dark:bg-slate-800/50">
+                      <td></td>
+                      <td colspan="8" class="p-2">
                         @if (prepInfo(r); as info) {
                           @if (info.notPreparedPeds.length > 0) {
-                            <div class="small">
-                              <span class="fw-bold text-success">✓ Preparados:</span>
+                            <div class="text-sm">
+                              <span class="font-bold text-emerald-600 dark:text-emerald-400">✓ Preparados:</span>
                               {{ info.preparedPeds.length > 0 ? info.preparedPeds.join(', ') : 'ninguno' }}
                             </div>
-                            <div class="small mt-1">
-                              <span class="fw-bold text-warning">— No preparados:</span> {{ info.notPreparedPeds.join(', ') }}
+                            <div class="mt-1 text-sm">
+                              <span class="font-bold text-amber-600 dark:text-amber-400">— No preparados:</span> {{ info.notPreparedPeds.join(', ') }}
                             </div>
                           } @else {
-                            <div class="small text-success fw-bold">
-                              <i class="bi bi-check-circle-fill"></i> Todos los pedidos fueron preparados
+                            <div class="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                              <svg lucideCircleCheck [size]="14" [strokeWidth]="2" aria-hidden="true" class="inline"></svg> Todos los pedidos fueron preparados
                             </div>
                           }
                         }
@@ -126,8 +126,9 @@ import { ApiError } from '../../core/api/api-error';
                 </ng-container>
               } @empty {
                 <tr>
-                  <td colspan="9" class="text-center py-4 text-muted" role="status">
-                    <i class="bi bi-clock-history empty-icon-sm" aria-hidden="true"></i>No hay despachos para esta fecha
+                  <td colspan="9" class="py-4 text-center text-sm text-slate-500" role="status">
+                    <svg lucideClock [size]="26" [strokeWidth]="1.5" aria-hidden="true" class="mx-auto mb-1 opacity-30"></svg>
+                    No hay despachos para esta fecha
                   </td>
                 </tr>
               }
@@ -136,22 +137,22 @@ import { ApiError } from '../../core/api/api-error';
         </div>
 
         @if (total() > 0) {
-          <div class="d-flex justify-content-between align-items-center small mt-1 flex-wrap gap-2">
-            <span class="text-muted">{{ total() }} registros — Pág. {{ resources.historialPage() }} de {{ totalPages() }}</span>
-            <div class="btn-group btn-group-sm">
-              <button type="button" class="btn btn-outline-secondary" (click)="goTo(resources.historialPage() - 1)" [disabled]="resources.historialPage() <= 1">
+          <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span class="text-slate-500">{{ total() }} registros — Pág. {{ resources.historialPage() }} de {{ totalPages() }}</span>
+            <div class="flex items-center gap-1">
+              <button type="button" class="btn btn-outline btn-sm" (click)="goTo(resources.historialPage() - 1)" [disabled]="resources.historialPage() <= 1">
                 ‹ Anterior
               </button>
               @for (p of pages(); track p) {
                 @if (p === -1) {
-                  <button type="button" class="btn btn-outline-secondary disabled">…</button>
+                  <button type="button" class="btn btn-outline btn-sm opacity-50" disabled>…</button>
                 } @else {
-                  <button type="button" class="btn btn-outline-secondary" [class.active]="p === resources.historialPage()" (click)="goTo(p)">
+                  <button type="button" class="btn btn-sm" [class.btn-primary]="p === resources.historialPage()" [class.btn-outline]="p !== resources.historialPage()" (click)="goTo(p)">
                     {{ p }}
                   </button>
                 }
               }
-              <button type="button" class="btn btn-outline-secondary" (click)="goTo(resources.historialPage() + 1)" [disabled]="resources.historialPage() >= totalPages()">
+              <button type="button" class="btn btn-outline btn-sm" (click)="goTo(resources.historialPage() + 1)" [disabled]="resources.historialPage() >= totalPages()">
                 Siguiente ›
               </button>
             </div>

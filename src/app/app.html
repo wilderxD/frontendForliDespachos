@@ -1,47 +1,53 @@
-<nav class="app-nav bg-card border-bottom px-3 d-flex align-items-center" role="navigation" aria-label="Principal">
-  <a class="brand me-3" routerLink="/preparar" aria-label="Sistema de Despacho Forli">
-    <i class="bi bi-truck-front-fill text-primary"></i>
-    <span class="fw-bold text-primary-fg">Forli Despacho</span>
+<nav
+  class="app-nav flex flex-shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+  role="navigation"
+  aria-label="Principal"
+>
+  <a class="brand mr-3 inline-flex items-center gap-2 whitespace-nowrap" routerLink="/preparar" aria-label="Sistema de Despacho Forli">
+    <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
+      <svg lucideTruck [size]="18" [strokeWidth]="2" aria-hidden="true"></svg>
+    </span>
+    <span class="brand-text font-bold text-slate-900 dark:text-white">
+      Forli <span class="font-semibold text-indigo-600 dark:text-indigo-400">Despacho</span>
+    </span>
   </a>
-  <ul class="d-flex align-items-center gap-1 m-0 p-0 me-auto" role="tablist">
+  <ul class="m-0 flex items-center gap-1 p-0" role="tablist">
     <li>
-      <a
-        class="nav-link"
-        routerLink="/preparar"
-        routerLinkActive="active"
-        aria-current="page"
-      >
-        <i class="bi bi-clipboard-check" aria-hidden="true"></i> Preparar
+      <a class="nav-link" routerLink="/preparar" routerLinkActive="active" aria-current="page">
+        <svg lucideClipboardCheck [size]="16" [strokeWidth]="2" aria-hidden="true"></svg>
+        Preparar
         @if (preparedCount() > 0) {
-          <span class="badge bg-primary ms-1 text-nowrap" style="font-size:0.6rem" role="status">{{ preparedCount() }}</span>
+          <span class="badge badge-white ml-1" role="status">{{ preparedCount() }}</span>
         }
       </a>
     </li>
     <li>
       <a class="nav-link" routerLink="/despachar" routerLinkActive="active" aria-current="page">
-        <i class="bi bi-truck" aria-hidden="true"></i> Despachar
+        <svg lucideTruck [size]="16" [strokeWidth]="2" aria-hidden="true"></svg>
+        Despachar
       </a>
     </li>
     <li>
       <a class="nav-link" routerLink="/historial" routerLinkActive="active" aria-current="page">
-        <i class="bi bi-clock-history" aria-hidden="true"></i> Historial
+        <svg lucideClock [size]="16" [strokeWidth]="2" aria-hidden="true"></svg>
+        Historial
         @if (histCount() > 0) {
-          <span class="badge bg-primary ms-1 text-nowrap" style="font-size:0.6rem" role="status">{{ histCount() }}</span>
+          <span class="badge badge-white ml-1" role="status">{{ histCount() }}</span>
         }
       </a>
     </li>
   </ul>
   <button
     type="button"
-    class="btn btn-sm btn-outline-secondary touch-target"
+    class="btn btn-ghost btn-icon ml-auto"
     (click)="toggleTheme()"
     [attr.aria-label]="dark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
     title="Cambiar tema"
   >
     @if (dark()) {
-      <i class="bi bi-sun-fill"></i>
+      <svg lucideSun [size]="18" [strokeWidth]="2" aria-hidden="true"></svg>
     } @else {
-      <i class="bi bi-moon-stars-fill"></i>
+      <svg lucideMoon [size]="18" [strokeWidth]="2" aria-hidden="true"></svg>
     }
   </button>
 </nav>

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { LucideArrowRight, LucideSearch } from '@lucide/angular';
 import { FiltrosBarComponent } from '../../shared/components/filtros-bar/filtros-bar.component';
 import { UbigeoTreeComponent } from '../../shared/components/ubigeo-tree/ubigeo-tree.component';
 import { ResourcesService } from '../../core/resources/resources.service';
@@ -11,18 +12,18 @@ import { agruparPorUbigeo, filtrarPedidos } from '../../shared/utils/pedido-util
 @Component({
   selector: 'app-preparar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FiltrosBarComponent, UbigeoTreeComponent, DatePipe],
+  imports: [FiltrosBarComponent, UbigeoTreeComponent, DatePipe, LucideArrowRight, LucideSearch],
   template: `
-    <div class="d-flex flex-column h-100 min-h-0">
+    <div class="flex h-full min-h-0 flex-col">
       <app-filtros-bar tab="prep" />
 
-      <div class="p-3 h-100 d-flex flex-column" style="overflow:hidden">
-        <div class="input-group input-group-sm mb-2 flex-shrink-0">
-          <span class="input-group-text bg-card"><i class="bi bi-search"></i></span>
+      <div class="flex h-full flex-col overflow-hidden p-3">
+        <div class="relative mb-2 flex-shrink-0">
+          <svg lucideSearch [size]="16" [strokeWidth]="2" aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></svg>
           <input
             id="txtBuscarPrep"
             type="text"
-            class="form-control"
+            class="input pl-9"
             placeholder="Buscar Cliente, Pedido..."
             aria-label="Buscar Cliente o Pedido"
             [value]="filtros().texto"
@@ -30,19 +31,19 @@ import { agruparPorUbigeo, filtrarPedidos } from '../../shared/utils/pedido-util
           />
         </div>
 
-        <div class="d-flex justify-content-between align-items-center flex-shrink-0 mb-2 touch-gap">
-          <div class="d-flex align-items-center touch-gap-sm">
-            <small class="text-muted-fg fw-semibold text-nowrap">{{ prepared() }} / {{ total() }} preparados</small>
+        <div class="mb-2 flex flex-shrink-0 items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <small class="whitespace-nowrap font-semibold text-slate-600 dark:text-slate-300">{{ prepared() }} / {{ total() }} preparados</small>
             @if (lastUpdated(); as ts) {
-              <small class="text-muted text-xs" style="white-space:nowrap">· {{ ts | date: 'HH:mm' }}</small>
+              <small class="whitespace-nowrap text-xs text-slate-400">· {{ ts | date: 'HH:mm' }}</small>
             }
           </div>
-          <button type="button" class="btn btn-sm btn-primary fw-bold text-nowrap" (click)="irADespachar()">
-            <i class="bi bi-arrow-right"></i> Ir a Despachar
+          <button type="button" class="btn btn-primary whitespace-nowrap" (click)="irADespachar()">
+            Ir a Despachar <svg lucideArrowRight [size]="15" [strokeWidth]="2" aria-hidden="true"></svg>
           </button>
         </div>
 
-        <div class="flex-grow-1 min-h-0">
+        <div class="min-h-0 flex-1">
           <app-ubigeo-tree mode="prepare" [groups]="grupos()" [loading]="loading()" />
         </div>
       </div>

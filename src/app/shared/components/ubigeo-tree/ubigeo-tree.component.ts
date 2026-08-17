@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { LucideCheckCheck, LucideChevronDown, LucideChevronRight, LucideEye, LucideEyeOff, LucideHouse, LucideInbox, LucideMapPin, LucideUser } from '@lucide/angular';
 import { Pedido } from '../../../core/models/pedido.model';
 import { ClienteGroup, PedidoItems, UbigeoGroup } from '../../utils/pedido-utils';
 import { EstadoService } from '../../../core/state/estado.service';
@@ -7,9 +8,9 @@ import { ModalService } from '../../ui/modal.service';
 @Component({
   selector: 'app-ubigeo-tree',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [LucideCheckCheck, LucideChevronDown, LucideChevronRight, LucideEye, LucideEyeOff, LucideHouse, LucideInbox, LucideMapPin, LucideUser],
   template: `
-    <div class="d-flex flex-column h-100">
+    <div class="flex h-full flex-col">
       @if (loading()) {
         <div class="p-2">
           <div class="skeleton skeleton-block"></div>
@@ -18,140 +19,145 @@ import { ModalService } from '../../ui/modal.service';
           <div class="skeleton skeleton-block" style="height:36px"></div>
         </div>
       } @else if (groups().length === 0) {
-        <div class="text-center text-muted py-5 small" role="status">
-          <i class="bi bi-inbox empty-icon" aria-hidden="true"></i>
+        <div class="py-5 text-center text-sm text-slate-500" role="status">
+          <svg lucideInbox [size]="32" [strokeWidth]="1.5" aria-hidden="true" class="mx-auto mb-2 opacity-40"></svg>
           {{ emptyText() }}
         </div>
       } @else {
-        <div class="flex-grow-1 overflow-auto p-1" role="tree" aria-label="Árbol de pedidos por ubicación">
+        <div class="flex-1 overflow-auto p-1" role="tree" aria-label="Árbol de pedidos por ubicación">
           @for (g of groups(); track g.ubigeo) {
-            <div class="ubigeo-container">
+            <div class="mb-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <button
                 type="button"
-                class="ubigeo-header-btn"
+                class="flex min-h-11 w-full items-center justify-between gap-2 bg-indigo-600 px-3 py-2 text-left text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
                 (click)="toggleUbigeo(g.ubigeo)"
                 [attr.aria-expanded]="isUbigeoOpen(g.ubigeo)"
                 [attr.aria-label]="ubigeoAria(g)"
               >
-                <span class="d-inline-flex align-items-center text-start" style="min-width:0">
-                  <i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>
-                  <span class="truncate-row">{{ g.ubigeo }}</span>
+                <span class="flex min-w-0 items-center gap-1.5">
+                  <svg lucideMapPin [size]="15" [strokeWidth]="2" aria-hidden="true"></svg>
+                  <span class="truncate">{{ g.ubigeo }}</span>
                   @if (mode() === 'prepare') {
-                    <span class="badge bg-white text-primary ms-2 text-nowrap" style="font-size:0.65rem">
-                      {{ ubigeoPrepared(g) }}/{{ g.total }}
-                    </span>
+                    <span class="badge badge-white ml-1">{{ ubigeoPrepared(g) }}/{{ g.total }}</span>
                   } @else {
-                    <span class="badge bg-white text-primary ms-2 text-nowrap" style="font-size:0.65rem">
-                      {{ g.total }}
-                    </span>
+                    <span class="badge badge-white ml-1">{{ g.total }}</span>
                     @if (cartCount(g) > 0) {
-                      <span class="badge bg-success ms-1 text-nowrap" style="font-size:0.65rem">{{ cartCount(g) }}</span>
+                      <span class="badge badge-success ml-1">{{ cartCount(g) }}</span>
                     }
                     @if (processedCount(g) > 0) {
-                      <span class="badge bg-light text-muted ms-1 text-nowrap" style="font-size:0.65rem;opacity:0.7">
-                        {{ processedCount(g) }} en ruta
-                      </span>
+                      <span class="badge badge-slate ml-1 opacity-70">{{ processedCount(g) }} en ruta</span>
                     }
                   }
                 </span>
+                <svg lucideChevronDown [size]="16" [strokeWidth]="2" aria-hidden="true" [class.rotate-180]="isUbigeoOpen(g.ubigeo)" class="shrink-0 transition-transform"></svg>
               </button>
 
               @if (isUbigeoOpen(g.ubigeo)) {
-                <div class="ubigeo-body p-1">
+                <div class="bg-white p-1 dark:bg-slate-900">
                   @if (mode() === 'prepare' && !allPrepared(g)) {
-                    <div class="d-flex justify-content-end mb-1">
-                      <button type="button" class="btn btn-xs btn-outline-primary" (click)="prepareAll(g)">
-                        <i class="bi bi-check-all me-1"></i>Preparar todos
+                    <div class="mb-1 flex justify-end">
+                      <button type="button" class="btn btn-primary btn-xs" (click)="prepareAll(g)">
+                        <svg lucideCheckCheck [size]="13" [strokeWidth]="2" aria-hidden="true"></svg>Preparar todos
                       </button>
                     </div>
                   }
                   @for (c of g.clientes; track c.cliente) {
-                    <div class="block-cliente">
+                    <div class="mb-1 ml-1 mr-1 rounded-md border-l-4 border-indigo-500 bg-white p-1 shadow-sm dark:bg-slate-900">
                       <div
-                        class="header-cliente cursor-pointer touch-target justify-content-start"
+                        class="flex min-h-11 cursor-pointer items-center justify-start gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400"
                         (click)="toggleCliente(clienteKey(g, c))"
                         role="button"
                         tabindex="0"
                         [attr.aria-expanded]="isClienteOpen(clienteKey(g, c))"
                       >
-                        <i
-                          class="bi bi-chevron-right me-1"
-                          [class.rotate-chevron]="isClienteOpen(clienteKey(g, c))"
+                        <svg
+                          lucideChevronRight
+                          [size]="15"
+                          [strokeWidth]="2"
                           aria-hidden="true"
-                        ></i>
-                        <i class="bi bi-person-fill me-1" aria-hidden="true"></i>
-                        <span class="truncate-row">{{ c.cliente }}</span>
-                        <span class="agency-badge text-truncate">{{ c.agencia }}</span>
+                          [class.rotate-chevron]="isClienteOpen(clienteKey(g, c))"
+                        ></svg>
+                        <svg lucideUser [size]="14" [strokeWidth]="2" aria-hidden="true"></svg>
+                        <span class="truncate">{{ c.cliente }}</span>
+                        <span class="badge badge-primary max-w-24 truncate">{{ c.agencia }}</span>
                         @if (mode() === 'prepare' && clienteAllPrepared(c)) {
-                          <span class="badge bg-success text-white ms-1" style="font-size:0.6rem">✓</span>
+                          <span class="badge badge-success">✓</span>
                         }
-                        <small class="text-muted-fg ms-auto me-1 text-nowrap">{{ c.total }} ped.</small>
+                        <small class="ml-auto mr-1 whitespace-nowrap text-xs font-normal text-slate-500">{{ c.total }} ped.</small>
                       </div>
 
                       @if (isClienteOpen(clienteKey(g, c))) {
-                        <div class="accordion">
+                        <div>
                           @for (pi of c.pedidos; track pi.pedido) {
                             @if (visiblePedido(pi)) {
-                              <div class="accordion-item mb-1 border-0 border-bottom {{ pedStatusClass(pi) }}">
-                                <div class="d-flex align-items-center flex-nowrap touch-gap-sm px-2 py-1 accordion-header-pedido">
-                                  <span class="order-title font-mono truncate-row">{{ pi.pedido }}</span>
+                              <div
+                                class="mb-1 border-b border-slate-200 last:mb-0 dark:border-slate-700"
+                                [class.border-l-4]="mode() === 'dispatch' && (pedInCart(pi) || pedProcessed(pi))"
+                                [class.border-emerald-500]="mode() === 'dispatch' && pedInCart(pi)"
+                                [class.bg-emerald-50]="mode() === 'dispatch' && pedInCart(pi)"
+                                [class.dark:bg-emerald-500/10]="mode() === 'dispatch' && pedInCart(pi)"
+                                [class.border-slate-400]="mode() === 'dispatch' && pedProcessed(pi)"
+                                [class.bg-slate-100]="mode() === 'dispatch' && pedProcessed(pi)"
+                                [class.dark:bg-slate-800]="mode() === 'dispatch' && pedProcessed(pi)"
+                              >
+                                <div class="flex items-center gap-1.5 bg-slate-100 px-2 py-1 dark:bg-slate-800">
+                                  <span class="font-mono min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100" [class.line-through]="mode() === 'dispatch' && pedProcessed(pi)">{{ pi.pedido }}</span>
                                   @if (mode() === 'dispatch' && pedInCart(pi)) {
-                                    <span class="badge bg-success text-white ms-1 text-nowrap" style="font-size:0.6rem">✓ LISTA</span>
+                                    <span class="badge badge-success">✓ LISTA</span>
                                   } @else if (mode() === 'dispatch' && pedProcessed(pi)) {
-                                    <span class="badge bg-secondary text-white ms-1 text-nowrap" style="font-size:0.6rem">EN RUTA</span>
+                                    <span class="badge badge-slate">EN RUTA</span>
                                   }
-                                  <span class="date-badge text-nowrap">{{ fecha(pi) }}</span>
-                                  <span class="status-badge text-nowrap">{{ pi.items[0].estado }}</span>
+                                  <span class="badge badge-slate">{{ fecha(pi) }}</span>
+                                  <span class="badge badge-amber">{{ pi.items[0].estado }}</span>
                                   @if (cantEspumas(pi) > 0) {
-                                    <span class="badge-espuma text-nowrap">E:{{ cantEspumas(pi) }}</span>
+                                    <span class="badge badge-espuma">E:{{ cantEspumas(pi) }}</span>
                                   }
                                   @if (cantResortes(pi) > 0) {
-                                    <span class="badge-resorte text-nowrap">R:{{ cantResortes(pi) }}</span>
+                                    <span class="badge badge-resorte">R:{{ cantResortes(pi) }}</span>
                                   }
-                                  <span class="ms-auto d-inline-flex align-items-center touch-gap-sm flex-shrink-0">
+                                  <span class="ml-auto flex shrink-0 items-center gap-1">
                                     <button
                                       type="button"
-                                      class="btn btn-sm border-0 p-0 touch-target-sm btn-ghost"
+                                      class="btn btn-ghost btn-icon-sm"
                                       (click)="showDir(pi)"
                                       [attr.aria-label]="'Ver dirección de llegada del pedido ' + pi.pedido"
                                     >
                                       @if (pi.items[0].direccion.trim()) {
-                                        <i class="bi bi-house-door-fill text-primary-fg"></i>
+                                        <svg lucideHouse [size]="15" [strokeWidth]="2" aria-hidden="true" class="text-indigo-600 dark:text-indigo-400"></svg>
                                       } @else {
-                                        <i class="bi bi-house-door text-muted opacity-25" aria-hidden="true"></i>
+                                        <svg lucideHouse [size]="15" [strokeWidth]="2" aria-hidden="true" class="opacity-25"></svg>
                                       }
                                     </button>
                                     <button
                                       type="button"
-                                      class="btn btn-sm border-0 p-0 touch-target-sm btn-ghost"
+                                      class="btn btn-ghost btn-icon-sm"
                                       (click)="showObs(pi)"
                                       [attr.aria-label]="'Ver observación del pedido ' + pi.pedido"
                                     >
                                       @if (pi.items[0].observacion.trim()) {
-                                        <i class="bi bi-eye-fill text-danger"></i>
+                                        <svg lucideEye [size]="15" [strokeWidth]="2" aria-hidden="true" class="text-red-600 dark:text-red-400"></svg>
                                       } @else {
-                                        <i class="bi bi-eye-slash text-muted opacity-25" aria-hidden="true"></i>
+                                        <svg lucideEyeOff [size]="15" [strokeWidth]="2" aria-hidden="true" class="opacity-25"></svg>
                                       }
                                     </button>
                                   </span>
-                                  <span class="badge bg-light text-secondary border text-xs ms-1 text-nowrap">
-                                    {{ pi.items.length }} it.
-                                  </span>
+                                  <span class="badge badge-slate">{{ pi.items.length }} it.</span>
                                 </div>
-                                <div class="accordion-body p-0">
-                                  <table class="table table-sm table-bordered mb-0 table-striped text-xs">
+                                <div class="bg-white dark:bg-slate-900">
+                                  <table class="table text-xs">
                                     @for (i of pi.items; track i.idUnico) {
-                                      <tr>
-                                        <td class="ps-3">{{ i.producto }}</td>
-                                        <td class="text-center fw-bold text-primary" style="width:40px">{{ i.cantidad }}</td>
+                                      <tr class="border-t border-slate-200 first:border-t-0 dark:border-slate-700">
+                                        <td class="pl-3">{{ i.producto }}</td>
+                                        <td class="w-10 text-center font-bold text-indigo-600 dark:text-indigo-400">{{ i.cantidad }}</td>
                                       </tr>
                                     }
                                   </table>
                                   @if (mode() === 'prepare') {
                                     <button
                                       type="button"
-                                      class="btn btn-sm btn-agregar btn-outline-card w-100 fw-bold btn-prepare"
-                                      [class.prepared]="isPrepared(pi)"
+                                      class="btn w-full justify-center rounded-md"
+                                      [class.btn-success]="isPrepared(pi)"
+                                      [class.btn-outline]="!isPrepared(pi)"
                                       (click)="togglePrepare(pi)"
                                     >
                                       {{ isPrepared(pi) ? '✓ Preparado' : 'Preparar' }}
@@ -159,9 +165,10 @@ import { ModalService } from '../../ui/modal.service';
                                   } @else {
                                     <button
                                       type="button"
-                                      class="btn btn-sm btn-agregar btn-outline-card w-100 fw-bold"
-                                      [class.text-success]="pedInCart(pi)"
-                                      [class.text-muted]="pedProcessed(pi)"
+                                      class="btn btn-outline w-full justify-center rounded-md"
+                                      [class.text-emerald-600]="pedInCart(pi)"
+                                      [class.dark:text-emerald-400]="pedInCart(pi)"
+                                      [class.text-slate-400]="pedProcessed(pi)"
                                       (click)="addToCart(pi)"
                                       [disabled]="pedInCart(pi) || pedProcessed(pi)"
                                     >
@@ -190,16 +197,6 @@ import { ModalService } from '../../ui/modal.service';
       }
     </div>
   `,
-  styles: [
-    `
-      .rotate-chevron { transform: rotate(90deg); transition: transform 0.15s ease; }
-      .accordion-header-pedido { background-color: var(--color-muted); }
-      :host ::ng-deep .accordion-body { background: var(--color-card); }
-      @media (prefers-reduced-motion: reduce) {
-        .rotate-chevron { transition: none; }
-      }
-    `,
-  ],
 })
 export class UbigeoTreeComponent {
   readonly mode = input<'prepare' | 'dispatch'>('prepare');
@@ -289,14 +286,6 @@ export class UbigeoTreeComponent {
   visiblePedido(pi: PedidoItems): boolean {
     if (this.mode() === 'prepare') return !this.estado.isProcessed(pi.pedido);
     return this.estado.isPrepared(pi.pedido);
-  }
-
-  pedStatusClass(pi: PedidoItems): string {
-    if (this.mode() === 'dispatch') {
-      if (this.pedInCart(pi)) return 'status-in-cart';
-      if (this.pedProcessed(pi)) return 'status-processed';
-    }
-    return '';
   }
 
   pedInCart(pi: PedidoItems): boolean {
