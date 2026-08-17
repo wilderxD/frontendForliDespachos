@@ -20,6 +20,10 @@ ul {
   list-style: none;
 }
 
+.app-content ::ng-deep > router-outlet {
+  display: none;
+}
+
 .app-content {
   flex: 1;
   min-height: 0;
