@@ -1,0 +1,54 @@
+<nav class="app-nav bg-card border-bottom px-3 d-flex align-items-center" role="navigation" aria-label="Principal">
+  <a class="brand me-3" routerLink="/preparar" aria-label="Sistema de Despacho Forli">
+    <i class="bi bi-truck-front-fill text-primary"></i>
+    <span class="fw-bold text-primary-fg">Forli Despacho</span>
+  </a>
+  <ul class="d-flex align-items-center gap-1 m-0 p-0 me-auto" role="tablist">
+    <li>
+      <a
+        class="nav-link"
+        routerLink="/preparar"
+        routerLinkActive="active"
+        aria-current="page"
+      >
+        <i class="bi bi-clipboard-check" aria-hidden="true"></i> Preparar
+        @if (preparedCount() > 0) {
+          <span class="badge bg-primary ms-1 text-nowrap" style="font-size:0.6rem" role="status">{{ preparedCount() }}</span>
+        }
+      </a>
+    </li>
+    <li>
+      <a class="nav-link" routerLink="/despachar" routerLinkActive="active" aria-current="page">
+        <i class="bi bi-truck" aria-hidden="true"></i> Despachar
+      </a>
+    </li>
+    <li>
+      <a class="nav-link" routerLink="/historial" routerLinkActive="active" aria-current="page">
+        <i class="bi bi-clock-history" aria-hidden="true"></i> Historial
+        @if (histCount() > 0) {
+          <span class="badge bg-primary ms-1 text-nowrap" style="font-size:0.6rem" role="status">{{ histCount() }}</span>
+        }
+      </a>
+    </li>
+  </ul>
+  <button
+    type="button"
+    class="btn btn-sm btn-outline-secondary touch-target"
+    (click)="toggleTheme()"
+    [attr.aria-label]="dark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+    title="Cambiar tema"
+  >
+    @if (dark()) {
+      <i class="bi bi-sun-fill"></i>
+    } @else {
+      <i class="bi bi-moon-stars-fill"></i>
+    }
+  </button>
+</nav>
+
+<div class="app-content">
+  <router-outlet />
+</div>
+
+<app-toast-host />
+<app-modal-host />
