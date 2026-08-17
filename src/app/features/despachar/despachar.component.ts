@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import Sortable from 'sortablejs';
-import { LucideCircleX, LucideFolderTree, LucideGripVertical, LucideInbox, LucideLoaderCircle, LucidePrinter, LucideRotateCcw, LucideSearch, LucideShoppingCart, LucideUser } from '@lucide/angular';
+import { LucideCircleX, LucideFolderTree, LucideGripVertical, LucideInbox, LucideLoaderCircle, LucidePrinter, LucideRotateCcw, LucideSearch, LucideShoppingCart, LucideStore, LucideUser } from '@lucide/angular';
 import { FiltrosBarComponent } from '../../shared/components/filtros-bar/filtros-bar.component';
 import { UbigeoTreeComponent } from '../../shared/components/ubigeo-tree/ubigeo-tree.component';
 import { ResourcesService } from '../../core/resources/resources.service';
@@ -19,12 +19,7 @@ import { ModalService } from '../../shared/ui/modal.service';
 import { ToastService } from '../../shared/ui/toast.service';
 import { GuardarResult } from '../../core/models/despacho.model';
 import { Pedido } from '../../core/models/pedido.model';
-import { PedidoItems, UbigeoGroup, agruparPorUbigeo, filtrarPedidos } from '../../shared/utils/pedido-utils';
-
-interface CartCliente {
-  cliente: string;
-  pedidos: CartPedido[];
-}
+import { AgenciaGroup, ClienteGroup, PedidoItems, UbigeoGroup, agruparPorUbigeo, filtrarPedidos } from '../../shared/utils/pedido-utils';
 
 interface CartPedido {
   pedido: string;
@@ -46,6 +41,7 @@ interface CartPedido {
     LucideRotateCcw,
     LucideSearch,
     LucideShoppingCart,
+    LucideStore,
     LucideUser,
   ],
   template: `
@@ -174,8 +170,24 @@ interface CartPedido {
                 Selecciona pedidos del panel izquierdo
               </div>
             } @else {
-              @for (cli of cartClientes(); track cli.cliente; let idx = $index) {
-                <div class="mb-1 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-700" style="animation-delay:{{ idx * 0.04 }}s">
+              @for (ag of cartAgencias(); track ag.agencia) {
+                <div class="cart-agencia overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-700">
+                  <button
+                    type="button"
+                    class="cart-agencia-header flex min-h-9 w-full items-center gap-1.5 bg-slate-200 px-2 py-1 text-left text-xs font-bold uppercase tracking-wide text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    (click)="toggleCartAgencia(ag.agencia)"
+                    [attr.aria-expanded]="isCartAgenciaOpen(ag.agencia)"
+                    [attr.data-agencia]="ag.agencia"
+                  >
+                    <svg lucideGripVertical [size]="14" [strokeWidth]="2" aria-hidden="true" class="drag-handle shrink-0 text-slate-500"></svg>
+                    <svg lucideStore [size]="13" [strokeWidth]="2" aria-hidden="true" class="shrink-0"></svg>
+                    <span class="truncate">{{ ag.agencia }}</span>
+                    <small class="ml-auto whitespace-nowrap text-xs font-semibold text-slate-500 dark:text-slate-400">{{ ag.total }} ped.</small>
+                  </button>
+                  @if (isCartAgenciaOpen(ag.agencia)) {
+                    <div class="cart-agencia-body p-1">
+                      @for (cli of ag.clientes; track cli.cliente; let idx = $index) {
+                        <div class="mb-1 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-700" style="animation-delay:{{ idx * 0.04 }}s">
                   <div
                     class="cart-client-header flex min-h-11 cursor-pointer items-center justify-between gap-2 border-l-4 border-indigo-500 bg-slate-100 px-2 py-1 dark:bg-slate-800"
                     (click)="toggleCartCliente(cli.cliente)"
@@ -220,6 +232,10 @@ interface CartPedido {
                   }
                 </div>
               }
+                </div>
+              }
+            </div>
+          }
             }
           </div>
 
@@ -264,13 +280,14 @@ export class DespacharComponent {
   readonly activePanel = signal<'tree' | 'cart'>('tree');
 
   private readonly closedCartClientes = signal<Set<string>>(new Set());
+  private readonly closedCartAgencias = signal<Set<string>>(new Set());
 
   readonly grupos = computed<UbigeoGroup[]>(() => {
     const prepared = this.estado.preparedItems();
     if (prepared.length === 0) return [];
     const iso = this.filtrosSvc.isoField(this.filtros().campoFecha);
     const filt = filtrarPedidos(prepared, this.filtros(), iso);
-    return agruparPorUbigeo(filt);
+    return agruparPorUbigeo(filt, this.filtros().campoFecha);
   });
 
   readonly loading = computed(() => this.resources.pedidosAll.isLoading());
@@ -287,13 +304,18 @@ export class DespacharComponent {
     return total > 0 ? Math.round((this.cartPedidoCount() / total) * 100) : 0;
   });
 
-  readonly cartClientes = computed<CartCliente[]>(() => {
-    const map = new Map<string, CartPedido[]>();
+  readonly cartAgencias = computed<AgenciaGroup[]>(() => {
+    const byAgencia = new Map<string, Map<string, CartPedido[]>>();
     for (const item of this.cart()) {
-      let list = map.get(item.cliente);
+      let cli = byAgencia.get(item.agencia);
+      if (!cli) {
+        cli = new Map();
+        byAgencia.set(item.agencia, cli);
+      }
+      let list = cli.get(item.cliente);
       if (!list) {
         list = [];
-        map.set(item.cliente, list);
+        cli.set(item.cliente, list);
       }
       let ped = list.find((p) => p.pedido === item.pedido);
       if (!ped) {
@@ -302,45 +324,73 @@ export class DespacharComponent {
       }
       ped.items.push(item);
     }
-    return Array.from(map.entries()).map(([cliente, pedidos]) => ({ cliente, pedidos }));
+    return Array.from(byAgencia.entries()).map(([agencia, clientes]) => {
+      const groups: ClienteGroup[] = Array.from(clientes.entries()).map(([cliente, pedidos]) => ({
+        cliente,
+        agencia,
+        pedidos,
+        total: pedidos.length,
+      }));
+      const total = groups.reduce((acc, c) => acc + c.total, 0);
+      return { agencia, clientes: groups, total };
+    });
   });
 
-  private sortable: Sortable | null = null;
+  private sortables: Sortable[] = [];
 
   constructor() {
     effect(() => {
       void this.cart();
-      if (this.sortable) {
-        this.sortable.destroy();
-        this.sortable = null;
-      }
-      requestAnimationFrame(() => this.initSortable());
+      void this.closedCartAgencias();
+      this.destroySortables();
+      requestAnimationFrame(() => this.initSortables());
     });
   }
 
-  private initSortable(): void {
+  private destroySortables(): void {
+    for (const s of this.sortables) s.destroy();
+    this.sortables = [];
+  }
+
+  private initSortables(): void {
     const el = document.getElementById('cartList');
     if (!el || this.cart().length === 0) return;
-    this.sortable = new Sortable(el, {
-      animation: 150,
-      handle: '.cart-client-header',
-      ghostClass: 'sortable-ghost',
-      onEnd: () => this.reorderFromDom(el),
+    this.sortables.push(
+      new Sortable(el, {
+        animation: 150,
+        handle: '.cart-agencia-header',
+        ghostClass: 'sortable-ghost',
+        onEnd: () => this.reorderFromDom(el),
+      }),
+    );
+    el.querySelectorAll('.cart-agencia-body').forEach((body) => {
+      this.sortables.push(
+        new Sortable(body as HTMLElement, {
+          animation: 150,
+          handle: '.cart-client-header',
+          ghostClass: 'sortable-ghost',
+          onEnd: () => this.reorderFromDom(el),
+        }),
+      );
     });
   }
 
   private reorderFromDom(el: HTMLElement): void {
     const ordenado: Pedido[] = [];
-    const groups = el.querySelectorAll(':scope > .mb-1');
-    groups.forEach((g) => {
-      const header = g.querySelector('.cart-client-header');
-      const cliente = header?.getAttribute('data-cliente') ?? '';
-      const pedDivs = g.querySelectorAll(':scope > div:last-child > .border-start');
-      pedDivs.forEach((pd) => {
-        const pedText = pd.querySelector('.fw-bold.small')?.textContent?.trim() ?? '';
-        this.cart()
-          .filter((i) => i.pedido === pedText && i.cliente === cliente)
-          .forEach((i) => ordenado.push(i));
+    const agencias = el.querySelectorAll(':scope > .cart-agencia');
+    agencias.forEach((ag) => {
+      const agencia = ag.querySelector('.cart-agencia-header')?.getAttribute('data-agencia') ?? '';
+      const groups = ag.querySelectorAll(':scope > .cart-agencia-body > .mb-1');
+      groups.forEach((g) => {
+        const header = g.querySelector('.cart-client-header');
+        const cliente = header?.getAttribute('data-cliente') ?? '';
+        const pedDivs = g.querySelectorAll(':scope > div:last-child > .border-start');
+        pedDivs.forEach((pd) => {
+          const pedText = pd.querySelector('.fw-bold.small')?.textContent?.trim() ?? '';
+          this.cart()
+            .filter((i) => i.pedido === pedText && i.cliente === cliente && i.agencia === agencia)
+            .forEach((i) => ordenado.push(i));
+        });
       });
     });
     if (ordenado.length === this.cart().length) {
@@ -357,11 +407,24 @@ export class DespacharComponent {
     return !this.closedCartClientes().has(cliente);
   }
 
+  isCartAgenciaOpen(agencia: string): boolean {
+    return !this.closedCartAgencias().has(agencia);
+  }
+
   toggleCartCliente(cliente: string): void {
     this.closedCartClientes.update((set) => {
       const next = new Set(set);
       if (next.has(cliente)) next.delete(cliente);
       else next.add(cliente);
+      return next;
+    });
+  }
+
+  toggleCartAgencia(agencia: string): void {
+    this.closedCartAgencias.update((set) => {
+      const next = new Set(set);
+      if (next.has(agencia)) next.delete(agencia);
+      else next.add(agencia);
       return next;
     });
   }

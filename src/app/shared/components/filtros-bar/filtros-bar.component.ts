@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { LucideChevronDown, LucideRefreshCw, LucideTag, LucideUsers, LucideX } from '@lucide/angular';
-import { FiltrosService, CampoFecha } from '../../../core/state/filtros.service';
+import { FiltrosService, CampoFecha, LineaFilter } from '../../../core/state/filtros.service';
 import { ResourcesService } from '../../../core/resources/resources.service';
 
 @Component({
@@ -58,6 +58,19 @@ import { ResourcesService } from '../../../core/resources/resources.service';
               F.Entrega
             </button>
           </div>
+        </div>
+        <div class="relative col-span-1">
+          <select
+            class="select"
+            [value]="filtros().linea"
+            (change)="setFiltros({ linea: $any($event.target).value })"
+            aria-label="Filtrar por tipo de colchón"
+            title="Filtrar por tipo de colchón"
+          >
+            <option value="">Todos</option>
+            <option value="RESORTE">C.R. (Resorte)</option>
+            <option value="ESPUMA">C. Espuma</option>
+          </select>
         </div>
         <div class="relative col-span-1">
           <button
@@ -166,7 +179,7 @@ export class FiltrosBarComponent {
   readonly supCount = computed(() => Math.max(0, this.supervisores().length - this.filtros().supervisores.length));
   readonly estCount = computed(() => Math.max(0, this.estados().length - this.filtros().estados.length));
 
-  setFiltros(patch: { fechaDesde?: string; fechaHasta?: string }): void {
+  setFiltros(patch: { fechaDesde?: string; fechaHasta?: string; linea?: LineaFilter }): void {
     if (this.tab() === 'prep') this.filtrosSvc.updatePrep(patch);
     else this.filtrosSvc.updateDesp(patch);
   }

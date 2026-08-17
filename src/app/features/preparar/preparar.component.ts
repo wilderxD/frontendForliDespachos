@@ -64,7 +64,7 @@ export class PrepararComponent {
     const flat = Object.values(all.byUbigeo).flat();
     const iso = this.filtrosSvc.isoField(this.filtros().campoFecha);
     const filt = filtrarPedidos(flat, this.filtros(), iso).filter((p) => !this.estado.isProcessed(p.pedido));
-    return agruparPorUbigeo(filt);
+    return agruparPorUbigeo(filt, this.filtros().campoFecha);
   });
 
   readonly loading = computed(() => this.resources.pedidosAll.isLoading());

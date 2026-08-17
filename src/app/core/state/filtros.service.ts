@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 export type CampoFecha = 'PEDIDOFECHA' | 'FECHAENTREGA';
+export type LineaFilter = '' | 'RESORTE' | 'ESPUMA';
 
 export interface Filtros {
   texto: string;
@@ -9,6 +10,7 @@ export interface Filtros {
   fechaDesde: string;
   fechaHasta: string;
   campoFecha: CampoFecha;
+  linea: LineaFilter;
 }
 
 const defaultFiltros = (): Filtros => ({
@@ -18,6 +20,7 @@ const defaultFiltros = (): Filtros => ({
   fechaDesde: '',
   fechaHasta: '',
   campoFecha: 'PEDIDOFECHA',
+  linea: '',
 });
 
 @Injectable({ providedIn: 'root' })

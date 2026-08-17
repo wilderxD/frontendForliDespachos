@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { LucideCheckCheck, LucideChevronDown, LucideChevronRight, LucideEye, LucideEyeOff, LucideHouse, LucideInbox, LucideMapPin, LucideUser } from '@lucide/angular';
+import { LucideCheckCheck, LucideChevronDown, LucideChevronRight, LucideEye, LucideEyeOff, LucideHouse, LucideInbox, LucideMapPin, LucideStore, LucideUser } from '@lucide/angular';
 import { Pedido } from '../../../core/models/pedido.model';
-import { ClienteGroup, PedidoItems, UbigeoGroup } from '../../utils/pedido-utils';
+import { AgenciaGroup, ClienteGroup, PedidoItems, UbigeoGroup } from '../../utils/pedido-utils';
 import { EstadoService } from '../../../core/state/estado.service';
+import { FiltrosService } from '../../../core/state/filtros.service';
 import { ModalService } from '../../ui/modal.service';
 
 @Component({
   selector: 'app-ubigeo-tree',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideCheckCheck, LucideChevronDown, LucideChevronRight, LucideEye, LucideEyeOff, LucideHouse, LucideInbox, LucideMapPin, LucideUser],
+  imports: [LucideCheckCheck, LucideChevronDown, LucideChevronRight, LucideEye, LucideEyeOff, LucideHouse, LucideInbox, LucideMapPin, LucideStore, LucideUser],
   template: `
     <div class="flex h-full flex-col">
       @if (loading()) {
@@ -61,34 +62,58 @@ import { ModalService } from '../../ui/modal.service';
                       </button>
                     </div>
                   }
-                  @for (c of g.clientes; track c.cliente) {
-                    <div class="mb-1 ml-1 mr-1 rounded-md border-l-4 border-indigo-500 bg-white p-1 shadow-sm dark:bg-slate-900">
-                      <div
-                        class="flex min-h-11 cursor-pointer items-center justify-start gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400"
-                        (click)="toggleCliente(clienteKey(g, c))"
-                        role="button"
-                        tabindex="0"
-                        [attr.aria-expanded]="isClienteOpen(clienteKey(g, c))"
+                  @for (a of g.agencias; track a.agencia) {
+                    <div class="mb-1 overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                      <button
+                        type="button"
+                        class="flex min-h-9 w-full items-center gap-1.5 px-2 py-1 text-left text-xs font-bold uppercase tracking-wide text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                        (click)="toggleAgencia(agenciaKey(g, a))"
+                        [attr.aria-expanded]="isAgenciaOpen(agenciaKey(g, a))"
                       >
                         <svg
                           lucideChevronRight
-                          [size]="15"
+                          [size]="14"
                           [strokeWidth]="2"
                           aria-hidden="true"
-                          [class.rotate-chevron]="isClienteOpen(clienteKey(g, c))"
+                          [class.rotate-chevron]="isAgenciaOpen(agenciaKey(g, a))"
                         ></svg>
-                        <svg lucideUser [size]="14" [strokeWidth]="2" aria-hidden="true"></svg>
-                        <span class="truncate">{{ c.cliente }}</span>
-                        <span class="badge badge-primary max-w-24 truncate">{{ c.agencia }}</span>
-                        @if (mode() === 'prepare' && clienteAllPrepared(c)) {
-                          <span class="badge badge-success">✓</span>
+                        <svg lucideStore [size]="13" [strokeWidth]="2" aria-hidden="true"></svg>
+                        <span class="truncate">{{ a.agencia }}</span>
+                        @if (mode() === 'prepare') {
+                          <span class="badge badge-slate ml-1">{{ agenciaPrepared(g, a) }}/{{ a.total }}</span>
+                        } @else {
+                          <span class="badge badge-slate ml-1">{{ a.total }} ped.</span>
                         }
-                        <small class="ml-auto mr-1 whitespace-nowrap text-xs font-normal text-slate-500">{{ c.total }} ped.</small>
-                      </div>
+                      </button>
+                      @if (isAgenciaOpen(agenciaKey(g, a))) {
+                        <div class="p-1">
+                          @for (c of a.clientes; track c.cliente) {
+                            <div class="mb-1 ml-1 mr-1 rounded-md border-l-4 border-indigo-500 bg-white p-1 shadow-sm dark:bg-slate-900">
+                              <div
+                                class="flex min-h-11 cursor-pointer items-center justify-start gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400"
+                                (click)="toggleCliente(clienteKey(g, a, c))"
+                                role="button"
+                                tabindex="0"
+                                [attr.aria-expanded]="isClienteOpen(clienteKey(g, a, c))"
+                              >
+                                <svg
+                                  lucideChevronRight
+                                  [size]="15"
+                                  [strokeWidth]="2"
+                                  aria-hidden="true"
+                                  [class.rotate-chevron]="isClienteOpen(clienteKey(g, a, c))"
+                                ></svg>
+                                <svg lucideUser [size]="14" [strokeWidth]="2" aria-hidden="true"></svg>
+                                <span class="truncate">{{ c.cliente }}</span>
+                                @if (mode() === 'prepare' && clienteAllPrepared(c)) {
+                                  <span class="badge badge-success">✓</span>
+                                }
+                                <small class="ml-auto mr-1 whitespace-nowrap text-xs font-normal text-slate-500">{{ c.total }} ped.</small>
+                              </div>
 
-                      @if (isClienteOpen(clienteKey(g, c))) {
-                        <div>
-                          @for (pi of c.pedidos; track pi.pedido) {
+                              @if (isClienteOpen(clienteKey(g, a, c))) {
+                                <div>
+                                  @for (pi of c.pedidos; track pi.pedido) {
                             @if (visiblePedido(pi)) {
                               <div
                                 class="mb-1 border-b border-slate-200 last:mb-0 dark:border-slate-700"
@@ -193,6 +218,10 @@ import { ModalService } from '../../ui/modal.service';
               }
             </div>
           }
+                </div>
+              }
+            </div>
+          }
         </div>
       }
     </div>
@@ -204,9 +233,11 @@ export class UbigeoTreeComponent {
   readonly loading = input(false);
 
   private readonly estado = inject(EstadoService);
+  private readonly filtrosSvc = inject(FiltrosService);
   private readonly modal = inject(ModalService);
 
   private readonly expandedUbigeos = signal<Set<string>>(new Set());
+  private readonly expandedAgencias = signal<Set<string>>(new Set());
   private readonly expandedClientes = signal<Set<string>>(new Set());
 
   readonly emptyText = computed(() =>
@@ -217,6 +248,10 @@ export class UbigeoTreeComponent {
 
   isUbigeoOpen(ubigeo: string): boolean {
     return this.expandedUbigeos().has(ubigeo);
+  }
+
+  isAgenciaOpen(key: string): boolean {
+    return this.expandedAgencias().has(key);
   }
 
   isClienteOpen(key: string): boolean {
@@ -232,6 +267,15 @@ export class UbigeoTreeComponent {
     });
   }
 
+  toggleAgencia(key: string): void {
+    this.expandedAgencias.update((set) => {
+      const next = new Set(set);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   toggleCliente(key: string): void {
     this.expandedClientes.update((set) => {
       const next = new Set(set);
@@ -241,8 +285,12 @@ export class UbigeoTreeComponent {
     });
   }
 
-  clienteKey(g: UbigeoGroup, c: ClienteGroup): string {
-    return g.ubigeo + '\u0000' + c.cliente;
+  agenciaKey(g: UbigeoGroup, a: AgenciaGroup): string {
+    return g.ubigeo + '\u0000' + a.agencia;
+  }
+
+  clienteKey(g: UbigeoGroup, a: AgenciaGroup, c: ClienteGroup): string {
+    return g.ubigeo + '\u0000' + a.agencia + '\u0000' + c.cliente;
   }
 
   ubigeoAria(g: UbigeoGroup): string {
@@ -251,7 +299,14 @@ export class UbigeoTreeComponent {
 
   ubigeoPrepared(g: UbigeoGroup): number {
     let count = 0;
-    for (const c of g.clientes) for (const p of c.pedidos) if (this.estado.isPrepared(p.pedido)) count++;
+    for (const a of g.agencias) for (const c of a.clientes) for (const p of c.pedidos) if (this.estado.isPrepared(p.pedido)) count++;
+    return count;
+  }
+
+  agenciaPrepared(g: UbigeoGroup, a: AgenciaGroup): number {
+    void g;
+    let count = 0;
+    for (const c of a.clientes) for (const p of c.pedidos) if (this.estado.isPrepared(p.pedido)) count++;
     return count;
   }
 
@@ -264,22 +319,24 @@ export class UbigeoTreeComponent {
   }
 
   prepareAll(g: UbigeoGroup): void {
-    for (const c of g.clientes) {
-      for (const pi of c.pedidos) {
-        if (!this.estado.isPrepared(pi.pedido)) this.estado.togglePrepare(pi.pedido, pi.items);
+    for (const a of g.agencias) {
+      for (const c of a.clientes) {
+        for (const pi of c.pedidos) {
+          if (!this.estado.isPrepared(pi.pedido)) this.estado.togglePrepare(pi.pedido, pi.items);
+        }
       }
     }
   }
 
   cartCount(g: UbigeoGroup): number {
     let count = 0;
-    for (const c of g.clientes) for (const p of c.pedidos) if (this.pedInCart(p)) count++;
+    for (const a of g.agencias) for (const c of a.clientes) for (const p of c.pedidos) if (this.pedInCart(p)) count++;
     return count;
   }
 
   processedCount(g: UbigeoGroup): number {
     let count = 0;
-    for (const c of g.clientes) for (const p of c.pedidos) if (this.pedProcessed(p)) count++;
+    for (const a of g.agencias) for (const c of a.clientes) for (const p of c.pedidos) if (this.pedProcessed(p)) count++;
     return count;
   }
 
@@ -301,7 +358,9 @@ export class UbigeoTreeComponent {
   }
 
   fecha(pi: PedidoItems): string {
-    return pi.items[0].fecha || '';
+    const f = this.mode() === 'prepare' ? this.filtrosSvc.prep() : this.filtrosSvc.desp();
+    const item = pi.items[0];
+    return f.campoFecha === 'FECHAENTREGA' ? (item.fechaEntrega || '') : (item.fecha || '');
   }
 
   cantEspumas(pi: PedidoItems): number {
