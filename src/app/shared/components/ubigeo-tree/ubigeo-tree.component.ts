@@ -40,6 +40,9 @@ import { ModalService } from '../../ui/modal.service';
                   <span class="truncate">{{ g.ubigeo }}</span>
                   @if (mode() === 'prepare') {
                     <span class="badge badge-white ml-1">{{ ubigeoPrepared(g) }}/{{ g.total }}</span>
+                    @if (cartCount(g) > 0) {
+                      <span class="badge badge-success ml-1">{{ cartCount(g) }}</span>
+                    }
                   } @else {
                     <span class="badge badge-white ml-1">{{ g.total }}</span>
                     @if (cartCount(g) > 0) {
@@ -117,19 +120,19 @@ import { ModalService } from '../../ui/modal.service';
                             @if (visiblePedido(pi)) {
                               <div
                                 class="mb-1 border-b border-slate-200 last:mb-0 dark:border-slate-700"
-                                [class.border-l-4]="mode() === 'dispatch' && (pedInCart(pi) || pedProcessed(pi))"
-                                [class.border-emerald-500]="mode() === 'dispatch' && pedInCart(pi)"
-                                [class.bg-emerald-50]="mode() === 'dispatch' && pedInCart(pi)"
-                                [class.dark:bg-emerald-500/10]="mode() === 'dispatch' && pedInCart(pi)"
-                                [class.border-slate-400]="mode() === 'dispatch' && pedProcessed(pi)"
-                                [class.bg-slate-100]="mode() === 'dispatch' && pedProcessed(pi)"
-                                [class.dark:bg-slate-800]="mode() === 'dispatch' && pedProcessed(pi)"
+                                [class.border-l-4]="pedInCart(pi) || pedProcessed(pi)"
+                                [class.border-emerald-500]="pedInCart(pi)"
+                                [class.bg-emerald-50]="pedInCart(pi)"
+                                [class.dark:bg-emerald-500/10]="pedInCart(pi)"
+                                [class.border-slate-400]="pedProcessed(pi)"
+                                [class.bg-slate-100]="pedProcessed(pi)"
+                                [class.dark:bg-slate-800]="pedProcessed(pi)"
                               >
                                 <div class="flex items-center gap-1.5 bg-slate-100 px-2 py-1 dark:bg-slate-800">
-                                  <span class="font-mono min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100" [class.line-through]="mode() === 'dispatch' && pedProcessed(pi)">{{ pi.pedido }}</span>
-                                  @if (mode() === 'dispatch' && pedInCart(pi)) {
+                                  <span class="font-mono min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100" [class.line-through]="pedProcessed(pi)">{{ pi.pedido }}</span>
+                                  @if (pedInCart(pi)) {
                                     <span class="badge badge-success">✓ LISTA</span>
-                                  } @else if (mode() === 'dispatch' && pedProcessed(pi)) {
+                                  } @else if (pedProcessed(pi)) {
                                     <span class="badge badge-slate">EN RUTA</span>
                                   }
                                   <span class="badge badge-slate">{{ fecha(pi) }}</span>
@@ -178,15 +181,34 @@ import { ModalService } from '../../ui/modal.service';
                                     }
                                   </table>
                                   @if (mode() === 'prepare') {
-                                    <button
-                                      type="button"
-                                      class="btn w-full justify-center rounded-md"
-                                      [class.btn-success]="isPrepared(pi)"
-                                      [class.btn-outline]="!isPrepared(pi)"
-                                      (click)="togglePrepare(pi)"
-                                    >
-                                      {{ isPrepared(pi) ? '✓ Preparado' : 'Preparar' }}
-                                    </button>
+                                    <div class="flex gap-1">
+                                      <button
+                                        type="button"
+                                        class="btn flex-1 justify-center rounded-md"
+                                        [class.btn-success]="isPrepared(pi)"
+                                        [class.btn-outline]="!isPrepared(pi)"
+                                        (click)="togglePrepare(pi)"
+                                      >
+                                        {{ isPrepared(pi) ? '✓ Preparado' : 'Preparar' }}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        class="btn btn-outline flex-1 justify-center rounded-md"
+                                        [class.text-emerald-600]="pedInCart(pi)"
+                                        [class.dark:text-emerald-400]="pedInCart(pi)"
+                                        [class.text-slate-400]="pedProcessed(pi)"
+                                        (click)="addToCart(pi)"
+                                        [disabled]="pedInCart(pi) || pedProcessed(pi)"
+                                      >
+                                        @if (pedInCart(pi)) {
+                                          EN LISTA ✓
+                                        } @else if (pedProcessed(pi)) {
+                                          EN RUTA
+                                        } @else {
+                                          AGREGAR (+)
+                                        }
+                                      </button>
+                                    </div>
                                   } @else {
                                     <button
                                       type="button"
