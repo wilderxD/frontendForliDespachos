@@ -19,6 +19,16 @@ interface CartPedido {
 @Component({
   selector: 'app-cart-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      :host {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1 1 0%;
+      }
+    `,
+  ],
   imports: [
     LucideCircleX,
     LucideGripVertical,
